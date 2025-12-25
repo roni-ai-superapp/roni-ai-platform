@@ -14,10 +14,10 @@ This registry prevents overlap when multiple agents work in parallel.
 | Agent | Repo | Issues | Branch | Status | ETA/Checkpoint |
 |-------|------|--------|--------|--------|----------------|
 | claude-opus | roni-ai-superapp/roni-ai-platform | #6, #7, #8 | main | ready-for-review | 2025-12-25 19:45 UTC |
-| agent-9 | roni-ai-superapp/repo-platform-api | #9 | main | active | 2025-12-27 19:45 UTC |
-| agent-10 | roni-ai-superapp/roni-ai-platform | #10 | main | active | 2025-12-27 19:45 UTC |
-| agent-12 | roni-ai-superapp/roni-ai-platform | #12 | main | active | 2025-12-27 19:45 UTC |
-| agent-14 | roni-ai-superapp/roni-ai-platform | #14 | main | active | 2025-12-27 19:45 UTC |
+| agent-9 | roni-ai-superapp/repo-platform-api | #9 | main | ready-for-review | 2025-12-25 - Integration test created |
+| agent-10 | roni-ai-superapp/roni-ai-platform | #10 | main | ready-for-review | 2025-12-25 - M2 verified, found bug #15 |
+| agent-12 | roni-ai-superapp/roni-ai-platform | #12 | main | ready-for-review | 2025-12-25 - Railway-safe CI added |
+| agent-14 | roni-ai-superapp/roni-ai-platform | #14 | main | ready-for-review | 2025-12-25 - Display bug fixed |
 
 **Issues #6, #7, #8 Complete:**
 - ✅ DDL tables (payers, clients, reps, sales_report_entries) + sales_report_view
@@ -33,6 +33,33 @@ This registry prevents overlap when multiple agents work in parallel.
 - ✅ Tool Gateway integration for data mutation tools
 - ✅ Data tool schemas added to shared-contracts
 - ✅ Railway deployment verified (SHA: feface4)
+
+**Issue #10 M2 Verification Complete:**
+- ✅ M2.1 DDL Generator - Complete
+- ✅ M2.2 Platform API DB - Complete
+- ⚠️ M2.3 Agent Runtime - 85% complete, blocked by #15 (schema mismatch)
+- ⏳ M2.4 Integration Test - Not started, blocked by #15
+- 📝 Created bug issue #15 for schema mismatch
+
+**Issue #12 Complete (Railway-safe CI):**
+- Added `scripts/check-deps.mjs` to services/plaid, plaid-frontend, accounting-db
+- Added `check:deps` and `precommit` scripts to package.json files
+- Updated CI workflows to run Railway-safe validation on PRs
+- Added check-deps to packages/data-ingestion for future use
+- Documented workspace:* issue in data-ingestion that needs fixing before Railway deploy
+- All health endpoints verified working (platform-api, frontend)
+
+**Issue #14 Complete (Display Bug Fix):**
+- Root cause: Column definitions used dot notation (`payer.name`) but DB view returns `payer_name`
+- Fixed `packages/platform-api/src/app_config/fixtures.ts` - changed field mappings
+- Fixed `packages/shared-contracts/fixtures/pageconfig/client1_sales_report_page.json`
+- TypeScript typecheck and lint pass
+
+**Issue #9 Progress (Integration Test):**
+- Created `packages/platform-api/tests/integration/m2-vertical-slice.test.ts` (400+ lines)
+- Created `packages/platform-api/vitest.config.ts`
+- Tests cover: preview/confirm flow, idempotency, audit log, whitelist enforcement
+- Blocked by #15 (schema mismatch) - tests document expected behavior
 
 ---
 
