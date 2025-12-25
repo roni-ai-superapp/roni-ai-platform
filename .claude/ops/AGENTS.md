@@ -14,6 +14,10 @@ This registry prevents overlap when multiple agents work in parallel.
 | Agent | Repo | Issues | Branch | Status | ETA/Checkpoint |
 |-------|------|--------|--------|--------|----------------|
 | claude-opus | roni-ai-superapp/roni-ai-platform | #6, #7, #8 | main | ready-for-review | 2025-12-25 19:45 UTC |
+| agent-9 | roni-ai-superapp/repo-platform-api | #9 | main | active | 2025-12-27 19:45 UTC |
+| agent-10 | roni-ai-superapp/roni-ai-platform | #10 | main | active | 2025-12-27 19:45 UTC |
+| agent-12 | roni-ai-superapp/roni-ai-platform | #12 | main | active | 2025-12-27 19:45 UTC |
+| agent-14 | roni-ai-superapp/roni-ai-platform | #14 | main | active | 2025-12-27 19:45 UTC |
 
 **Issues #6, #7, #8 Complete:**
 - ✅ DDL tables (payers, clients, reps, sales_report_entries) + sales_report_view
