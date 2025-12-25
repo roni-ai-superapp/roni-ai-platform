@@ -13,9 +13,9 @@ This registry prevents overlap when multiple agents work in parallel.
 
 | Agent | Repo | Issues | Branch | Status | ETA/Checkpoint |
 |-------|------|--------|--------|--------|----------------|
-| claude-opus | roni-ai-superapp/roni-ai-platform | #6, #7 | main | ready-for-review | 2025-12-25 18:50 UTC |
+| claude-opus | roni-ai-superapp/roni-ai-platform | #6, #7, #8 | main | ready-for-review | 2025-12-25 19:45 UTC |
 
-**Issues #6 and #7 Complete:**
+**Issues #6, #7, #8 Complete:**
 - ✅ DDL tables (payers, clients, reps, sales_report_entries) + sales_report_view
 - ✅ Prisma schema with PageConfig, ToolExecution, AuditLog, ViewWhitelist
 - ✅ Migrations applied to Railway Postgres (Postgres-OG9n)
@@ -25,6 +25,10 @@ This registry prevents overlap when multiple agents work in parallel.
 - ✅ CORS configured for frontend domain
 - ✅ DATABASE_OPS.md with Railway CLI limitations documented
 - ✅ Verification screenshots posted inline to both issues
+- ✅ ToolExecutor implemented with data.insert_row support
+- ✅ Tool Gateway integration for data mutation tools
+- ✅ Data tool schemas added to shared-contracts
+- ✅ Railway deployment verified (SHA: feface4)
 
 ---
 
