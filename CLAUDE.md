@@ -17,23 +17,25 @@
 **Every session MUST start with these steps:**
 
 ```bash
-# 1. Go to the monorepo
-cd /Users/tdeshane/roni-ai/roni-ai-platform
+# 1. Go to the monorepo (use portable path)
+cd ~/roni-ai/roni-ai-platform
+# Or from anywhere inside the repo:
+cd "$(git rev-parse --show-toplevel)"
 
 # 2. Update submodules
 git submodule update --remote --merge
 
-# 3. Read status
+# 3. Read status (this is the source of truth for "what's next")
 cat .claude/ops/STATUS.md | head -50
 
 # 4. Check open issues
 gh issue list --repo roni-ai-superapp/roni-ai-platform --state open --limit 15
 
-# 5. Check agent registry
+# 5. Check agent registry for conflicts
 cat .claude/ops/AGENTS.md
 
-# 6. Register yourself (if starting new work)
-# Add entry to AGENTS.md
+# 6. Confirm your planned work is still top priority in STATUS.md
+# 7. Register yourself (add entry to AGENTS.md)
 ```
 
 ---
@@ -46,20 +48,68 @@ All work follows an issue-driven workflow.
 
 **Before starting work:**
 
-1. Assign yourself to the issue
-2. Comment on the issue:
+1. **Confirm priority** - Check `.claude/ops/STATUS.md` to ensure issue is still top priority
+2. Assign yourself to the issue
+3. Comment on the issue with UTC timestamp:
    ```
-   Claimed by <agent-name> until <YYYY-MM-DD>.
+   Claimed by <agent-name> until 2025-12-27 17:00 UTC.
    Repo: roni-ai-superapp/<repo>
    Scope: <files/areas>
    Branch: agent/<name>/issue-###-slug
    ```
-3. Add label: `in-progress`
-4. Update `.claude/ops/AGENTS.md`
+4. Add label: `in-progress`
+5. Update `.claude/ops/AGENTS.md`
 
 **Lease default:** 48 hours. Renew with a comment if needed.
 
-### 2. Working Issues
+### 2. Repo Routing (Critical)
+
+**Before running any `gh` command, determine the correct repo:**
+
+- **Package-specific issues** → package repo
+- **Cross-cutting issues** → monorepo
+
+| Issue Type | Repo |
+|------------|------|
+| Frontend bugs/features | `roni-ai-superapp/repo-frontend` |
+| API bugs/features | `roni-ai-superapp/repo-platform-api` |
+| Schema changes | `roni-ai-superapp/1-shared-contracts` |
+| Milestones, integration | `roni-ai-superapp/roni-ai-platform` |
+
+```bash
+# Set default repo (override per-package as needed)
+export GH_REPO=roni-ai-superapp/roni-ai-platform
+
+# Or use --repo flag explicitly
+gh issue list --repo roni-ai-superapp/repo-frontend
+```
+
+### 3. Submodule Two-PR Rule
+
+**If you change code inside `packages/<name>` (a submodule):**
+
+1. The PR must land in the **submodule repo first**
+2. Then bump the gitlink in the **parent repo**
+
+```bash
+# 1. Work in submodule
+cd packages/frontend
+git checkout -b agent/<name>/issue-###-slug
+# ... make changes ...
+git commit -m "feat: ..."
+git push origin agent/<name>/issue-###-slug
+
+# 2. Create PR in submodule repo
+gh pr create --repo roni-ai-superapp/repo-frontend
+
+# 3. After PR merges, update parent
+cd ../..
+git add packages/frontend
+git commit -m "chore: bump frontend submodule"
+git push
+```
+
+### 4. Working Issues
 
 **Workflow:**
 1. Create a branch: `agent/<name>/issue-###-slug`
@@ -68,26 +118,6 @@ All work follows an issue-driven workflow.
 4. Open PR; merge to `main` after CI passes
 5. Update issue with status
 6. **Close issues only when explicitly directed by a human**
-
-### 3. Multi-Repo Considerations
-
-This is a monorepo with submodules. Always specify the repo:
-
-```bash
-# Set default repo for gh commands
-export GH_REPO=roni-ai-superapp/roni-ai-platform
-
-# Or use --repo flag
-gh issue list --repo roni-ai-superapp/repo-frontend
-```
-
-**Package-level issues** go in the package's own repo:
-- `roni-ai-superapp/repo-frontend` - Frontend issues
-- `roni-ai-superapp/repo-platform-api` - API issues
-- `roni-ai-superapp/1-shared-contracts` - Schema issues
-
-**Cross-cutting issues** go in the monorepo:
-- `roni-ai-superapp/roni-ai-platform` - Integration, milestones
 
 ---
 
@@ -105,6 +135,21 @@ gh issue list --repo roni-ai-superapp/repo-frontend
 3. Merge PRs when CI is green
 4. Add labels
 5. Comment on issues with status updates
+
+---
+
+## Ready-for-Review Gate (Strict)
+
+Before applying the `ready-for-review` label, **all three must be true:**
+
+1. **Tests + typecheck pass** (or a tracking issue exists for failures)
+2. **PR open** with description (+ screenshots/logs if UI-affecting)
+3. **AGENTS.md updated** with status `ready-for-review` and link to PR
+
+```bash
+# Only after all three are true:
+gh issue edit <number> --add-label "ready-for-review" --repo <repo>
+```
 
 ---
 
@@ -189,6 +234,19 @@ pnpm typecheck
 pnpm lint
 ```
 
+### Database Bootstrap (M2+)
+
+```bash
+# Start Postgres
+docker compose up -d postgres
+
+# Set DATABASE_URL in packages/platform-api/.env
+# DATABASE_URL=postgresql://user:pass@localhost:5432/roni_platform
+
+# Run migrations
+cd packages/platform-api && pnpm prisma migrate dev
+```
+
 ### Golden Path Test (M2+)
 
 ```bash
@@ -231,7 +289,7 @@ Before ending a session:
 | Purpose | Location |
 |---------|----------|
 | Technical context | `.claude/AGENT_CONTEXT.md` |
-| Status | `.claude/ops/STATUS.md` |
+| Status (source of truth) | `.claude/ops/STATUS.md` |
 | Agent registry | `.claude/ops/AGENTS.md` |
 | Workflow | `.claude/ops/DEV_WORKFLOW.md` |
 | Architecture | `docs/ARCHITECTURE.md` |

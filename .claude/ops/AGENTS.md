@@ -17,47 +17,43 @@ This registry prevents overlap when multiple agents work in parallel.
 
 ---
 
-## Conventions
-
-- **Agent:** Short identifier (e.g., "opus-1", "claude-code", "codex-ops")
-- **Repo:** `roni-ai-superapp/<repo>` (monorepo or package repo)
-- **Issues:** `#123`, `#124` (comma-separated, scoped to Repo)
-- **Branch:** `agent/<name>/issue-###-slug`
-- **Status:** `active`, `blocked`, `idle`, `handoff`, `ready-for-review`
-- **ETA/Checkpoint:** Next planned update time (UTC)
-
----
-
 ## Status Values
 
-| Status | Meaning |
-|--------|---------|
-| `active` | Currently working on the issue |
-| `blocked` | Waiting on external dependency |
-| `idle` | Available for new work |
-| `handoff` | Passing work to another agent |
-| `ready-for-review` | Code complete, awaiting human verification |
-| `pending-ci` | Waiting for CI to complete |
+These match GitHub labels for consistency:
+
+| Status | GitHub Label | Meaning |
+|--------|--------------|---------|
+| `active` | `in-progress` | Currently working on the issue |
+| `blocked` | `blocked` | Waiting on external dependency |
+| `pending-ci` | `pending-ci` | Waiting for CI to complete |
+| `ready-for-review` | `ready-for-review` | Code complete, awaiting human verification |
+| `idle` | _(none)_ | Available for new work |
+| `handoff` | _(none)_ | Passing work to another agent |
 
 ---
 
 ## Claiming an Issue
 
 ```bash
-# 1. Assign yourself
+# 1. Check this registry for conflicts
+cat .claude/ops/AGENTS.md
+
+# 2. Assign yourself (use correct repo!)
 gh issue edit <number> --add-assignee @me --repo roni-ai-superapp/<repo>
 
-# 2. Add in-progress label
+# 3. Add in-progress label
 gh issue edit <number> --add-label "in-progress" --repo roni-ai-superapp/<repo>
 
-# 3. Comment with claim
-gh issue comment <number> --repo roni-ai-superapp/<repo> --body "Claimed by <agent-name> until <YYYY-MM-DD>.
+# 4. Comment with claim (include UTC timestamp!)
+gh issue comment <number> --repo roni-ai-superapp/<repo> --body "Claimed by <agent-name> until 2025-12-27 17:00 UTC.
 Repo: roni-ai-superapp/<repo>
 Scope: <files/areas>
 Branch: agent/<name>/issue-###-slug"
 
-# 4. Update this file
+# 5. Update this file with your entry
 ```
+
+**Lease default:** 48 hours. Renew with a new comment if needed.
 
 ---
 
@@ -67,7 +63,17 @@ When done or handing off:
 
 1. Update this file (set status to `idle` or `handoff`)
 2. Comment on the issue with current status
-3. Remove `in-progress` label if appropriate
+3. Update label if appropriate (`ready-for-review`, remove `in-progress`)
+
+---
+
+## Ready-for-Review Checklist
+
+Before setting status to `ready-for-review`:
+
+- [ ] Tests + typecheck pass (or tracking issue exists)
+- [ ] PR open with description
+- [ ] This file updated with `ready-for-review` status and PR link
 
 ---
 
