@@ -1,312 +1,297 @@
 # Development Workflow
 
-**For AI Agents and Human Developers**
-
-This document defines the standard workflow for working on the Roni AI Platform.
+**For AI Agents (Claude Code) and Human Developers**
 
 ---
 
-## ⛔ CRITICAL: AI Agent Constraints
+## Non-Negotiables
 
-**AI agents MUST NOT:**
-1. **Close issues without explicit human direction**
-2. **Delete data** without explicit human approval
-3. **Push secrets or credentials**
-4. **Claim "done" without verification**
+Copy these into every agent prompt:
 
-**AI agents CAN:**
-1. Create issues
-2. Write code and commit
-3. Merge PRs when CI is green
-4. Add labels
-5. Comment on issues with status updates
+- **Do NOT close issues** unless a human explicitly directs it
+- **No secrets, no data deletion** without explicit approval
+- **No "done" without verification** (tests pass, golden path works)
+- **48h issue lease + AGENTS.md registry is mandatory** before changing code
 
 ---
 
-## Multi-Agent Coordination (REQUIRED)
+## Issue-Driven Development Loop
 
-### 1) Claiming Work (Issue Lease)
+All work follows this loop:
 
-Before starting:
+```
+Check STATUS.md → Find/Create Issue → Claim (48h lease) → Implement → Verify → Mark Ready-for-Review
+                                                                                        ↓
+                                                                    Human closes when verified
+```
+
+---
+
+## 1) Session Start Protocol
 
 ```bash
-# 1. Check agent registry
-cat .claude/ops/AGENTS.md
+# Set default repo
+export GH_REPO=roni-ai-superapp/roni-ai-platform
 
-# 2. Assign yourself to the issue
+# Go to repo
+cd ~/roni-ai/roni-ai-platform
+
+# Update submodules
+git submodule update --remote --merge
+
+# Read status (source of truth for priorities)
+cat .claude/ops/STATUS.md | head -50
+
+# Check open issues
+gh issue list --state open --limit 15
+
+# Check agent registry for conflicts
+cat .claude/ops/AGENTS.md
+```
+
+---
+
+## 2) Claiming an Issue
+
+**Before any code changes:**
+
+```bash
+# 1. Acknowledge in issue
+gh issue comment <number> --body "Acknowledged. Working this now."
+
+# 2. Assign yourself
 gh issue edit <number> --add-assignee @me --repo roni-ai-superapp/<repo>
 
 # 3. Add in-progress label
 gh issue edit <number> --add-label "in-progress" --repo roni-ai-superapp/<repo>
 
-# 4. Comment with claim
-gh issue comment <number> --repo roni-ai-superapp/<repo> --body "Claimed by <agent-name> until <YYYY-MM-DD>.
+# 4. Post claim comment with UTC timestamp
+gh issue comment <number> --repo roni-ai-superapp/<repo> --body "Claimed by <agent-name> until 2025-12-27 17:00 UTC.
 Repo: roni-ai-superapp/<repo>
-Scope: <files/areas>
+Scope: <packages/files>
 Branch: agent/<name>/issue-###-slug"
 
 # 5. Update AGENTS.md
 ```
 
-**Lease default:** 48 hours. Renew with a comment if needed.
+**Lease duration:** 48 hours. Renew with new comment if needed.
 
-### 2) Agent Registry
+---
 
-Update `.claude/ops/AGENTS.md` at the start of work:
-- Agent name
-- Repo (roni-ai-superapp/...)
-- Active issue(s)
-- Branch
-- Status
-- ETA or checkpoint time
+## 3) Repo Routing
 
-### 3) Branch & Merge Protocol
+**Critical: Determine correct repo before any `gh` command.**
 
-**Branch naming:**
+| Issue Type | Repo |
+|------------|------|
+| Frontend bugs/features | `roni-ai-superapp/repo-frontend` |
+| API bugs/features | `roni-ai-superapp/repo-platform-api` |
+| Schema changes | `roni-ai-superapp/1-shared-contracts` |
+| Milestones, integration, cross-cutting | `roni-ai-superapp/roni-ai-platform` |
+
+---
+
+## 4) Submodule Two-PR Rule
+
+**If code changes are inside `packages/<x>` (a submodule):**
+
+1. Branch + push **inside the submodule**
+2. PR + merge in the **submodule repo first**
+3. Then bump pointer in parent repo + commit
+
+```bash
+# Work in submodule
+cd packages/frontend
+git checkout -b agent/<name>/issue-###-slug
+# ... make changes ...
+git commit -m "feat: ..."
+git push origin agent/<name>/issue-###-slug
+
+# PR in submodule repo
+gh pr create --repo roni-ai-superapp/repo-frontend
+
+# After submodule PR merges, bump parent
+cd ../..
+git add packages/frontend
+git commit -m "chore: bump frontend submodule"
+git push
+```
+
+---
+
+## 5) Branch Naming
+
 ```
 agent/<name>/issue-###-short-slug
 ```
 
-**Merge rules (all must be true):**
-- PR is rebased on `main`
-- CI is green (no failing checks)
-- Issue has a fresh claim (<= 48h)
-- AGENTS.md is up to date
+Examples:
+- `agent/opus/issue-6-ddl-generator`
+- `agent/claude/issue-7-prisma-schema`
 
-### 4) Direct Push to `main` (Exception Only)
+---
 
-**Allowed only for:**
+## 6) Railway-Safe Dependencies (Non-Optional)
+
+**Policy:** No git/SSH-based dependencies in deployable services. Railway builds have no SSH keys.
+
+### Dependency Rules:
+- **No git deps:** `github:`, `git+ssh:`, `git@`, `.git` URLs will break Railway
+- **Private packages:** Use GitHub Packages with semver versions, not git URLs
+- **Required config:** `.npmrc` must exist with registry config for `@roni-ai-superapp` scope
+- **Lockfile:** Must be committed for `--frozen-lockfile` to work
+
+### Pre-Commit Checklist (must pass locally):
+```bash
+# Run before every commit in deployable repos
+pnpm check:deps
+```
+
+This script catches:
+- git/SSH dependencies that will break Railway
+- Private scope deps without proper .npmrc config
+- Missing lockfiles
+
+### CI Enforcement:
+CI runs on **all PRs** to catch Railway failures before merge:
+1. `pnpm check:deps` - Railway-safe dependency check
+2. `pnpm install --frozen-lockfile` - Clean install (no SSH keys)
+3. `pnpm typecheck && pnpm lint && pnpm test`
+4. `pnpm build`
+
+**If you change deps, CI must pass a clean install.**
+
+---
+
+## 7) Testing Protocol (Local Only)
+
+**No Playwright/deploy checks yet.** Use unit → integration → manual.
+
+### Minimum bar before PR:
+
+```bash
+# Per impacted package
+cd packages/platform-api && pnpm check:deps && pnpm test && pnpm typecheck && pnpm lint
+cd packages/frontend && pnpm check:deps && pnpm test && pnpm typecheck && pnpm lint
+cd packages/shared-contracts && pnpm test
+```
+
+### Golden Path Smoke Test:
+
+When UI or API touched:
+
+```bash
+# Terminal 1: API
+cd packages/platform-api && pnpm dev  # :3001
+
+# Terminal 2: Frontend
+cd packages/frontend && pnpm dev      # :3000
+
+# Browser
+open http://localhost:3000/pages/sales-report
+```
+
+Verify the sales report page loads with data.
+
+---
+
+## 8) Error Handling (Non-Optional)
+
+When tests/lint/typecheck fail:
+
+| Action | When |
+|--------|------|
+| **Fix** | Errors are straightforward |
+| **File tech-debt issue** | Errors are complex or unrelated |
+| **Justify + track** | Explain why it doesn't block AND create issue |
+
+**"No action" is never acceptable.**
+
+---
+
+## 9) Merge Rules
+
+PR can be merged when ALL are true:
+
+- [ ] PR rebased on `main`
+- [ ] CI green (validates Railway-safe deps + build)
+- [ ] Tests + typecheck pass in impacted packages
+- [ ] Issue has fresh claim (≤ 48h)
+- [ ] AGENTS.md is up to date
+
+**Direct push to `main` only for:**
 - Docs-only changes
 - Single-file, low-risk fixes
 
-If you push to `main`, you MUST:
-- Update STATUS.md session log
-- Post a GitHub issue comment
-
-### 5) Conflict Avoidance
-
-- Do not modify files claimed by another agent
-- If overlapping changes needed, coordinate in issue comments first
-
 ---
 
-## Issue Lifecycle
+## 10) Ready-for-Review Gate
 
-```
-Created → Claimed → In Progress → PR Open → Merged → Verified → Closed
-                                                         ↑
-                                    Human verification ──┘
-```
+Before applying `ready-for-review` label:
 
-**Close issues only when directed by a human.**
-
----
-
-## Development Workflow
-
-### Before Making Changes
+- [ ] Tests + typecheck pass (or tracking issue exists)
+- [ ] PR open with description
+- [ ] AGENTS.md updated with `ready-for-review` status + PR link
+- [ ] Golden path verified (if UI/API touched)
 
 ```bash
-# 1. Update submodules
-git submodule update --remote --merge
-
-# 2. Check you're on the right branch
-git status
-
-# 3. Create a feature branch
-git checkout -b agent/<name>/issue-###-slug
-```
-
-### While Working
-
-1. **Read before modifying** - Always read a file before editing
-2. **Run tests frequently** - After each significant change
-3. **Update todo list** - Track progress
-4. **Commit logical units** - Don't wait until everything is done
-
-### Test Requirements
-
-| Change Type | Required Tests |
-|-------------|----------------|
-| Bug fix | Run related tests + full suite |
-| New feature | Add tests + run full suite |
-| Refactor | Run full suite |
-
-```bash
-# Run tests in a package
-cd packages/platform-api && pnpm test
-
-# Type check
-cd packages/platform-api && pnpm typecheck
-
-# Lint
-cd packages/platform-api && pnpm lint
+gh issue edit <number> --add-label "ready-for-review" --repo <repo>
 ```
 
 ---
 
-## Commit Protocol
+## 11) Session End Protocol
 
-### Commit Message Format
-
-```
-<type>(<scope>): <description> (#issue)
-
-[optional body]
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-**Types:**
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `refactor:` - Code refactoring
-- `test:` - Adding tests
-- `docs:` - Documentation
-- `chore:` - Maintenance
-
-### When to Commit
-
-| Situation | Commit? |
-|-----------|---------|
-| Feature complete | YES |
-| Bug fix complete | YES |
-| Tests added | YES |
-| WIP end of session | YES (use `WIP:` prefix) |
-
----
-
-## Working with Submodules
-
-### Making Changes in a Package
-
-```bash
-# 1. Navigate to submodule
-cd packages/frontend
-
-# 2. Create branch
-git checkout -b agent/<name>/issue-###-slug
-
-# 3. Make changes, commit
-git add . && git commit -m "feat: ..."
-
-# 4. Push submodule
-git push origin agent/<name>/issue-###-slug
-
-# 5. Create PR in submodule repo
-gh pr create --repo roni-ai-superapp/repo-frontend
-
-# 6. After merge, update parent repo
-cd ../..
-git add packages/frontend
-git commit -m "chore: update frontend submodule"
-git push
-```
-
-### Pulling Latest Submodule Changes
-
-```bash
-# Update all submodules
-git submodule update --remote --merge
-
-# Or update specific submodule
-cd packages/frontend && git pull origin main
-```
-
----
-
-## Error Handling Policy
-
-When running `pnpm tsc`, `pnpm test`, `pnpm lint`:
-
-**"No action" is never acceptable.** You must:
-
-1. **Fix** - If errors are straightforward
-2. **Create Issue** - If errors are complex/unrelated, create issue with `tech-debt` label
-3. **Justify Proceeding** - Explicitly state why errors don't affect current work AND create tracking issue
-
-**Never** dismiss errors without tracking them.
-
----
-
-## Session End Protocol
-
-Before ending a session:
-
-1. **Commit all pending work**
+1. **Commit WIP**
    ```bash
    git add . && git commit -m "WIP: description"
    git push origin <branch>
    ```
 
-2. **Update STATUS.md**
-   - Add session log entry
-   - Update milestone status
+2. **Update STATUS.md** (session log entry)
 
-3. **Update GitHub issues**
-   ```bash
-   gh issue comment <number> --body "Session update: ..."
-   ```
+3. **Update AGENTS.md** (status = `idle` or `handoff`)
 
-4. **Update AGENTS.md**
-   - Set status to `idle` or `handoff`
+4. **Post issue comment** with current state
 
 ---
 
-## Multi-Repo Issue References
+## 12) Status Values
 
-This is a monorepo with submodules. Always specify the repo:
+| AGENTS.md Status | GitHub Label | Meaning |
+|------------------|--------------|---------|
+| `active` | `in-progress` | Working on it |
+| `blocked` | `blocked` | Waiting on dependency |
+| `pending-ci` | `pending-ci` | Waiting for CI |
+| `ready-for-review` | `ready-for-review` | Awaiting human verification |
+| `idle` | _(none)_ | Available for new work |
+| `handoff` | _(none)_ | Passing to another agent |
 
-```bash
-# Monorepo issues (cross-cutting, milestones)
-gh issue list --repo roni-ai-superapp/roni-ai-platform
+---
 
-# Package-specific issues
-gh issue list --repo roni-ai-superapp/repo-frontend
-gh issue list --repo roni-ai-superapp/repo-platform-api
-gh issue list --repo roni-ai-superapp/1-shared-contracts
+## 13) Commit Message Format
+
+```
+<type>(<scope>): <description> (#issue)
+
+Types: feat, fix, refactor, docs, test, chore
 ```
 
-**Where to create issues:**
-
-| Issue Type | Repo |
-|------------|------|
-| Milestone tracking | roni-ai-platform |
-| Cross-package integration | roni-ai-platform |
-| Frontend bugs/features | repo-frontend |
-| API bugs/features | repo-platform-api |
-| Schema changes | 1-shared-contracts |
+Examples:
+```
+feat(data-ingestion): add DDL generator (#6)
+fix(platform-api): handle null cost in revenue calc (#7)
+```
 
 ---
 
-## Checklist Templates
+## 14) Agent Prompt Templates
 
-### New Session Checklist
-
-- [ ] Read STATUS.md
-- [ ] Check agent registry (AGENTS.md)
-- [ ] Update submodules
-- [ ] Check open issues
-- [ ] Identify priority work
-- [ ] Claim issue and update AGENTS.md
-
-### Pre-Commit Checklist
-
-- [ ] Tests pass (`pnpm test`)
-- [ ] Type check passes (`pnpm typecheck`)
-- [ ] No linting errors (`pnpm lint`)
-- [ ] Commit message follows format
-- [ ] Issue number referenced
-
-### Session End Checklist
-
-- [ ] All work committed
-- [ ] STATUS.md updated
-- [ ] GitHub issues updated
-- [ ] Changes pushed
-- [ ] AGENTS.md updated (status = idle)
+See `CLAUDE.md` for copy-paste prompts:
+- Creating new issues (no implementation)
+- Claiming + implementing issues
+- Investigation / spike (no code)
+- Breaking down complex features (epic)
 
 ---
 
