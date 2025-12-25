@@ -13,7 +13,12 @@ This registry prevents overlap when multiple agents work in parallel.
 
 | Agent | Repo | Issues | Branch | Status | ETA/Checkpoint |
 |-------|------|--------|--------|--------|----------------|
-| claude-opus | roni-ai-superapp/roni-ai-platform | #6 | agent/opus/issue-6-ddl-generator | active | 2025-12-27 12:29 UTC |
+| claude-opus | roni-ai-superapp/roni-ai-platform | #6 | agent/opus/issue-6-ddl-generator | ready-for-review | Implementation complete, awaiting human review |
+
+**Submodule branches for #6:**
+- `packages/shared-contracts`: `agent/opus/issue-6-esm-fixes`
+- `packages/data-ingestion`: `agent/opus/issue-6-ddl-generator`
+- `packages/platform-api`: `agent/opus/issue-6-migration`
 
 ---
 
