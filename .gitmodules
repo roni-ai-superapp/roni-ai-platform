@@ -1,0 +1,39 @@
+[submodule "packages/shared-contracts"]
+	path = packages/shared-contracts
+	url = https://github.com/roni-ai-superapp/1-shared-contracts.git
+[submodule "packages/platform-api"]
+	path = packages/platform-api
+	url = https://github.com/roni-ai-superapp/repo-platform-api.git
+[submodule "packages/frontend"]
+	path = packages/frontend
+	url = https://github.com/roni-ai-superapp/repo-frontend.git
+[submodule "packages/agent-runtime"]
+	path = packages/agent-runtime
+	url = https://github.com/roni-ai-superapp/repo-agent-runtime.git
+[submodule "packages/worker"]
+	path = packages/worker
+	url = https://github.com/roni-ai-superapp/repo-worker.git
+[submodule "packages/data-ingestion"]
+	path = packages/data-ingestion
+	url = https://github.com/roni-ai-superapp/repo-data-ingestion.git
+[submodule "packages/accounting-core"]
+	path = packages/accounting-core
+	url = https://github.com/roni-ai-superapp/repo-accounting-core.git
+[submodule "services/plaid"]
+	path = services/plaid
+	url = https://github.com/roni-ai-superapp/plaid.git
+[submodule "services/stripe"]
+	path = services/stripe
+	url = https://github.com/roni-ai-superapp/stripe.git
+[submodule "services/plaid-frontend"]
+	path = services/plaid-frontend
+	url = https://github.com/roni-ai-superapp/plaid-frontend.git
+[submodule "services/accounting-db"]
+	path = services/accounting-db
+	url = https://github.com/roni-ai-superapp/accounting-db-service.git
+[submodule "infra"]
+	path = infra
+	url = https://github.com/roni-ai-superapp/repo-infra.git
+[submodule "packages/packs"]
+	path = packages/packs
+	url = https://github.com/roni-ai-superapp/repo-packs.git
