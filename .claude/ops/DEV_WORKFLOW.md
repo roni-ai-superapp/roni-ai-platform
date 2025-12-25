@@ -233,10 +233,75 @@ Before applying `ready-for-review` label:
 - [ ] PR open with description
 - [ ] AGENTS.md updated with `ready-for-review` status + PR link
 - [ ] Golden path verified (if UI/API touched)
+- [ ] **Screenshot posted in issue comment** (if UI touched)
 
 ```bash
 gh issue edit <number> --add-label "ready-for-review" --repo <repo>
 ```
+
+---
+
+## 10.1) Visual Verification with Screenshots
+
+**Required for all UI-touching changes.** Screenshots must be inline (visible in GitHub), not links.
+
+### Taking a Screenshot
+
+```bash
+# From monorepo root, uses Playwright
+cd /tmp && npm init -y && npm install playwright
+node -e "
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await page.goto('https://frontend-dev-5e53.up.railway.app/pages/sales-report', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(3000);
+  await page.screenshot({ path: '/tmp/screenshot.png', fullPage: true });
+  await browser.close();
+})();
+"
+```
+
+### Making Screenshots Inline in GitHub Issues
+
+For images to render inline (not as links), commit to repo and use raw URL:
+
+```bash
+# 1. Copy to repo
+mkdir -p docs/screenshots
+cp /tmp/screenshot.png docs/screenshots/issue-<N>-<name>-$(date +%Y%m%d).png
+
+# 2. Commit and push
+git add docs/screenshots/
+git commit -m "docs: add verification screenshot for issue #N"
+git push
+
+# 3. Reference in issue comment using raw URL
+# Format: ![Alt Text](https://raw.githubusercontent.com/roni-ai-superapp/roni-ai-platform/main/docs/screenshots/issue-N-name-YYYYMMDD.png)
+```
+
+### Verification Comment Template
+
+```markdown
+## ✅ Issue #N Verified
+
+### API Response
+\`\`\`json
+{...response data...}
+\`\`\`
+
+### Visual Verification
+![Description](https://raw.githubusercontent.com/roni-ai-superapp/roni-ai-platform/main/docs/screenshots/issue-N-name.png)
+
+### Checklist
+- [x] Item 1
+- [x] Item 2
+
+cc @toddllm @germee
+```
+
+**Always tag @toddllm and @germee for human review.**
 
 ---
 
