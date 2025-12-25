@@ -119,6 +119,23 @@ Seeds:
 
 ---
 
+## Railway CLI Limitations
+
+**Service deletion is NOT available via CLI.** You must use the Railway Dashboard to delete services.
+
+Available service commands:
+- `railway add` - Add new service (databases, repos, Docker images)
+- `railway service` - Link/status of services
+- `railway down` - Remove most recent **deployment** (not the service)
+- `railway unlink` - Disassociate project from directory
+
+To delete a service:
+1. Go to Railway Dashboard → Project
+2. Click the service
+3. Settings → Danger Zone → Delete Service
+
+---
+
 ## Troubleshooting
 
 ### "Can't reach database server"
