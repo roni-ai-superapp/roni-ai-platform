@@ -298,10 +298,10 @@ git push
 - [x] Item 1
 - [x] Item 2
 
-cc @toddllm @germee
+cc @toddllm @germeeai
 ```
 
-**Always tag @toddllm and @germee for human review.**
+**Always tag @toddllm and @germeeai for human review.**
 
 ---
 
