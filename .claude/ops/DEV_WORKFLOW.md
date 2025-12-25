@@ -227,15 +227,25 @@ PR can be merged when ALL are true:
 
 ## 10) Ready-for-Review Gate
 
-Before applying `ready-for-review` label:
+Before applying `ready-for-review` label, ALL must be true:
 
-- [ ] Tests + typecheck pass (or tracking issue exists)
-- [ ] PR open with description
-- [ ] AGENTS.md updated with `ready-for-review` status + PR link
-- [ ] Golden path verified (if UI/API touched)
-- [ ] **Screenshot posted in issue comment** (if UI touched)
+- [ ] Tests + typecheck + lint pass locally
+- [ ] CI green (wait for GitHub Actions to complete)
+- [ ] Railway dev deploy successful (verify via health endpoint)
+- [ ] Golden path smoke test passes (frontend loads, API returns data)
+- [ ] **Screenshot posted in issue comment** (REQUIRED for ALL issues)
+- [ ] Verification comment posted with API response + screenshot + checklist
+- [ ] AGENTS.md updated with `ready-for-review` status
+- [ ] @toddllm and @germeeai tagged for human review
 
 ```bash
+# Wait for CI to pass
+gh run list --repo roni-ai-superapp/<repo> --limit 1
+
+# Check Railway deploy
+curl -s https://platform-api-dev-9a40.up.railway.app/health
+
+# Then mark ready
 gh issue edit <number> --add-label "ready-for-review" --repo <repo>
 ```
 
@@ -243,7 +253,13 @@ gh issue edit <number> --add-label "ready-for-review" --repo <repo>
 
 ## 10.1) Visual Verification with Screenshots
 
-**Required for all UI-touching changes.** Screenshots must be inline (visible in GitHub), not links.
+**Required for ALL issues.** Every issue must have a screenshot in the verification comment.
+
+- **UI changes**: Screenshot the affected page
+- **API changes**: Screenshot a frontend page that uses the API
+- **No frontend exists**: Create a stub page that calls the API and displays results
+
+Screenshots must be inline (visible in GitHub), not links.
 
 ### Taking a Screenshot
 
