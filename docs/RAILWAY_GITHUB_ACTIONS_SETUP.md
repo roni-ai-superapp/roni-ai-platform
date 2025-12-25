@@ -205,6 +205,7 @@ gh api /repos/roni-ai-superapp/<repo>/actions/runners | jq '.runners[].name'
 | Service | Repo | Railway Project | Secrets | Runner | Status |
 |---------|------|-----------------|---------|--------|--------|
 | platform-api | repo-platform-api | platform | ✅ | ✅ | ✅ Deployed |
+| frontend | repo-frontend | platform | ✅ | ⏳ Pending | ⏳ Waiting for runner |
 | plaid | plaid | platform | ✅ | ⏳ Pending | ⏳ Waiting for runner |
 | plaid-frontend | plaid-frontend | platform | ✅ | ⏳ Pending | ⏳ Waiting for runner |
 
@@ -216,6 +217,15 @@ gh api /repos/roni-ai-superapp/<repo>/actions/runners | jq '.runners[].name'
 ### Runner Setup Commands (Quick Reference)
 
 ```bash
+# For frontend
+mkdir -p ~/actions-runner-frontend
+cd ~/actions-runner-frontend
+curl -o actions-runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-osx-arm64-2.321.0.tar.gz
+tar xzf actions-runner.tar.gz
+# Get token from: https://github.com/roni-ai-superapp/repo-frontend/settings/actions/runners/new
+./config.sh --url https://github.com/roni-ai-superapp/repo-frontend --token <TOKEN> --name frontend-runner --unattended --replace
+nohup ./run.sh > runner.log 2>&1 &
+
 # For plaid
 cd ~/actions-runner-plaid
 # Get token from: https://github.com/roni-ai-superapp/plaid/settings/actions/runners/new
