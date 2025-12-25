@@ -13,7 +13,7 @@ This registry prevents overlap when multiple agents work in parallel.
 
 | Agent | Repo | Issues | Branch | Status | ETA/Checkpoint |
 |-------|------|--------|--------|--------|----------------|
-| _example_ | roni-ai-superapp/roni-ai-platform | #6 | agent/example/issue-6-ddl-generator | active | 2025-12-26 12:00 UTC |
+| claude-opus | roni-ai-superapp/roni-ai-platform | #6 | agent/opus/issue-6-ddl-generator | active | 2025-12-27 12:29 UTC |
 
 ---
 
