@@ -4,6 +4,121 @@
 
 ---
 
+## Key Learnings & Recommendations
+
+### Railway Auto-Rebuild Behavior
+
+**Railway automatically rebuilds services when environment variables change.**
+
+- No need to run `railway redeploy` after `railway variables --set`
+- The rebuild happens within ~30-60 seconds
+- Always verify via health endpoint SHA to confirm new deployment
+
+### Health Endpoint Best Practices
+
+The health endpoint should expose configuration state for debugging:
+
+```json
+{
+  "status": "healthy",
+  "service": "platform-api",
+  "version": "0.1.0",
+  "sha": "9a51f7c7...",           // Git SHA - confirms code version
+  "uptime_ms": 30260,
+  "timestamp": "2025-12-25T18:47:36.694Z",
+  // Consider adding:
+  "db_connected": true,          // Database connectivity
+  "cors_origin": "https://..."   // Helps debug CORS issues
+}
+```
+
+### CORS Configuration
+
+**Always set `CORS_ORIGIN` on API services that serve frontends:**
+
+```bash
+railway variables --service platform-api --set 'CORS_ORIGIN=https://frontend-dev-5e53.up.railway.app,http://localhost:3000'
+```
+
+Without this, browser requests from frontend will fail with CORS errors even though curl works.
+
+### Environment Variable Naming
+
+**Use `NEXT_PUBLIC_` prefix for frontend env vars that need browser access:**
+
+```bash
+# These are available in browser JavaScript
+NEXT_PUBLIC_API_URL=https://platform-api-dev-9a40.up.railway.app
+NEXT_PUBLIC_ORG_ID=org1
+
+# These are server-side only (NOT available in browser)
+API_SECRET_KEY=...
+```
+
+---
+
+## Database Architecture Recommendations
+
+### Single Database per Environment
+
+**Recommendation: One PostgreSQL instance per environment (dev, staging, prod).**
+
+| Environment | Database Service | Services Connected |
+|-------------|------------------|-------------------|
+| dev | Postgres-OG9n | platform-api |
+| staging | (TBD) | platform-api |
+| prod | (TBD) | platform-api |
+
+**Rationale:**
+- Simpler to manage migrations
+- Easier to debug (one place to look)
+- Cost-effective (Railway charges per service)
+- All application services share same data
+
+### Naming Convention
+
+```
+Postgres-{ENV}-{RANDOM}
+```
+
+Examples:
+- `Postgres-dev-OG9n` (current)
+- `Postgres-staging-XXXX`
+- `Postgres-prod-XXXX`
+
+### Service-to-Database Linking
+
+**Always use variable references, not hardcoded URLs:**
+
+```bash
+# CORRECT - uses Railway's internal reference
+railway variables --set 'DATABASE_URL=${{Postgres-OG9n.DATABASE_URL}}'
+
+# WRONG - hardcoded URL will break if database is recreated
+railway variables --set 'DATABASE_URL=postgresql://postgres:password@host:5432/railway'
+```
+
+### Before Creating a New Database
+
+1. **Check if one already exists** for the environment
+2. **Document in this file** if creating new
+3. **Link all services** that need database access
+4. **Run migrations** before deploying application code
+
+### Cleanup Protocol
+
+When a database service is no longer needed:
+
+1. **Verify no services reference it:**
+   ```bash
+   railway variables --service SERVICE_NAME | grep DATABASE_URL
+   ```
+2. **Backup data if needed** (use pg_dump)
+3. **Delete via Dashboard** (CLI cannot delete services)
+4. **Update this document** to remove the entry
+
+---
+
 ## Current Status
 
 ### Railway PostgreSQL - DEV Environment
@@ -50,14 +165,15 @@
 
 ## Verification Checklist
 
-### Issue #6 (DDL Generator) - NEEDS VERIFICATION
+### Issue #6 (DDL Generator) - VERIFIED ✅
 
 - [x] Migration applied
-- [x] Tables created (clients, payers, reps, etc.)
+- [x] Tables created (clients, payers, reps, sales_report_entries)
 - [x] View created (sales_report_view)
-- [ ] **Insert test data into tables**
-- [ ] **Verify view returns joined data correctly**
-- [ ] **Test from frontend UI**
+- [x] Test data inserted (3 payers, 2 clients, 2 reps, 3 sales entries)
+- [x] View returns joined data with computed fields (revenue, commission, net)
+- [x] Frontend displays data from Postgres
+- [x] Screenshot posted to issue
 
 ### Issue #7 (Platform API DB) - VERIFIED ✅
 
@@ -66,6 +182,9 @@
 - [x] Seed data inserted
 - [x] API `/app-config/pages/sales-report` returns from DB
 - [x] API `/app-config/data/sales_report_view` queries view
+- [x] BigInt/Decimal/Date serialization working
+- [x] CORS configured for frontend
+- [x] Screenshot posted to issue
 
 ---
 
