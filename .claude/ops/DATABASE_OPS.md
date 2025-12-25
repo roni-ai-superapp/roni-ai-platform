@@ -13,10 +13,11 @@
 | **Project** | platform |
 | **Environment** | dev |
 | **Database Service** | Postgres-OG9n |
-| **Internal URL** | `postgres-og9n.railway.internal:5432` |
-| **Public URL** | `caboose.proxy.rlwy.net:55777` |
+| **Internal Host** | `postgres-og9n.railway.internal:5432` |
+| **Public Host** | Get via `railway run --service Postgres-OG9n -- printenv DATABASE_PUBLIC_URL` |
 | **Database Name** | railway |
 | **User** | postgres |
+| **Password** | Get from Railway Dashboard or CLI (never commit!) |
 
 ### Services Linked to Database
 
@@ -250,17 +251,19 @@ DATABASE_URL="..." npx prisma migrate reset
 ## Quick Verification Commands
 
 ```bash
-# Set public URL for convenience
-export DATABASE_URL="postgresql://postgres:UFsxYOQCPdTExjbmAywxocNZnYSUspFo@caboose.proxy.rlwy.net:55777/railway"
+# Get credentials from Railway (never commit these!)
+railway service link Postgres-OG9n
+railway run --service Postgres-OG9n -- printenv DATABASE_PUBLIC_URL
+# Copy the URL, extract host:port and password
 
 # List all tables
-PGPASSWORD=UFsxYOQCPdTExjbmAywxocNZnYSUspFo psql -h caboose.proxy.rlwy.net -p 55777 -U postgres -d railway -c "\dt"
+PGPASSWORD=$PASSWORD psql -h $HOST -p $PORT -U postgres -d railway -c "\dt"
 
 # List views
-PGPASSWORD=UFsxYOQCPdTExjbmAywxocNZnYSUspFo psql -h caboose.proxy.rlwy.net -p 55777 -U postgres -d railway -c "\dv"
+PGPASSWORD=$PASSWORD psql -h $HOST -p $PORT -U postgres -d railway -c "\dv"
 
 # Check seed data
-PGPASSWORD=UFsxYOQCPdTExjbmAywxocNZnYSUspFo psql -h caboose.proxy.rlwy.net -p 55777 -U postgres -d railway -c "SELECT slug, title FROM page_configs;"
+PGPASSWORD=$PASSWORD psql -h $HOST -p $PORT -U postgres -d railway -c "SELECT slug, title FROM page_configs;"
 
 # Test API
 curl -s https://platform-api-dev-9a40.up.railway.app/app-config/pages/sales-report | jq '.slug, .title'
