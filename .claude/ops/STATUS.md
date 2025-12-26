@@ -12,34 +12,43 @@
 
 ## Current Milestone
 
-**M2: Data Layer + Agent Runtime** ✅ (90% Complete)
+**M3: Accounting Engine** 🚧 (Ready to Start)
 
 | Issue | Title | Status | Assignee |
 |-------|-------|--------|----------|
-| #6 | M2.1 DDL Generator | ✅ Complete | claude-opus |
-| #7 | M2.2 Platform API DB | ✅ Complete | claude-opus |
-| #8 | M2.3 Agent Runtime | ✅ Complete | claude-opus |
-| #9 | M2.4 Integration Test | ✅ Tests written | agent-9 |
-| #10 | M2 Definition of Done | ✅ Verified | agent-10 |
+| #3 | M3 Epic | 🔲 Planned | - |
+| #16 | M3.1 Source Event Bridge | 🔲 Not started | - |
+| #17 | M3.2 Posting Rules | 🔲 Not started | - |
+| #18 | M3.3 Auto-Posting Worker | 🔲 Not started | - |
+| #19 | M3.4 Trial Balance + Statements | 🔲 Not started | - |
+| #20 | M3.5 Integration Test + DoD | 🔲 Not started | - |
 
-**North Star:** `data.insert_row` → row appears in TableBox ✅
+**Build Order:** #16 → #17 → #18 → #19 → #20
 
-**Completed Work:**
-- DDL tables (payers, clients, reps, sales_report_entries) + sales_report_view
-- Prisma schema with PageConfig, ToolExecution, AuditLog, ViewWhitelist
-- Migrations applied to Railway Postgres
-- API endpoints return data from DB
-- ToolExecutor with data.insert_row support
-- Integration tests for preview/confirm flow
-- Schema fix (#15) - validator aligned with executor
+**North Star:** Data insert → Journal entry generated → Posted → Appears in Trial Balance
 
 ---
 
 ## Next Actions (Priority Order)
 
-1. **Run integration tests with database** (verify end-to-end)
-2. **Close completed M2 issues** (#6, #7, #8, #9, #10)
-3. **Plan M3: Accounting Engine**
+1. **Start M3.1** (#16) - Source Event Bridge
+2. **Address #13** - Database architecture review (tech-debt)
+
+---
+
+## Completed: M2 Data Layer + Agent Runtime ✅
+
+| Issue | Title | Status |
+|-------|-------|--------|
+| #6 | M2.1 DDL Generator | ✅ Complete |
+| #7 | M2.2 Platform API DB | ✅ Complete |
+| #8 | M2.3 Agent Runtime | ✅ Complete |
+| #9 | M2.4 Integration Test | ✅ 10/10 tests pass |
+| #10 | M2 Definition of Done | ✅ Verified |
+| #14 | Display bug fix | ✅ Fixed |
+| #15 | Schema mismatch fix | ✅ Fixed |
+
+**All issues have 👀 needs-eyeballs label - awaiting human review to close.**
 
 ---
 
@@ -110,6 +119,13 @@ _None currently_
 ---
 
 ## Session Log
+
+### 2025-12-26 (continued)
+
+- Integration tests: 10/10 pass ✅
+- Added 👀 needs-eyeballs label to all M2 issues
+- Updated DEV_WORKFLOW.md with review gate pattern
+- M2 complete, M3 planning started
 
 ### 2025-12-26
 
