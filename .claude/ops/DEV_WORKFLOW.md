@@ -242,8 +242,10 @@ Before applying `ready-for-review` label, ALL must be true:
 # Wait for CI to pass
 gh run list --repo roni-ai-superapp/<repo> --limit 1
 
-# Check Railway deploy
+# Check Railway deploy (DEV environment)
 curl -s https://platform-api-dev-9a40.up.railway.app/health
+# Frontend: https://frontend-dev-5e53.up.railway.app
+# Golden path: https://frontend-dev-5e53.up.railway.app/pages/sales-report
 
 # Then mark ready - BOTH labels required
 gh issue edit <number> --add-label "ready-for-review" --add-label "👀 needs-eyeballs" --repo <repo>

@@ -104,11 +104,13 @@ cd packages/platform-api && pnpm prisma migrate dev
 
 ## Environment Health
 
-| Service | Status | Notes |
-|---------|--------|-------|
-| platform-api | ✅ Railway | https://platform-api.railway.app |
-| frontend | ✅ Railway | https://frontend.railway.app |
+| Service | Status | URL |
+|---------|--------|-----|
+| platform-api | ✅ Railway | https://platform-api-dev-9a40.up.railway.app |
+| frontend | ✅ Railway | https://frontend-dev-5e53.up.railway.app |
 | postgres | ✅ Railway | Postgres-OG9n |
+
+**Golden Path:** https://frontend-dev-5e53.up.railway.app/pages/sales-report
 
 ---
 
