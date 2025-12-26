@@ -245,9 +245,15 @@ gh run list --repo roni-ai-superapp/<repo> --limit 1
 # Check Railway deploy
 curl -s https://platform-api-dev-9a40.up.railway.app/health
 
-# Then mark ready
-gh issue edit <number> --add-label "ready-for-review" --repo <repo>
+# Then mark ready - BOTH labels required
+gh issue edit <number> --add-label "ready-for-review" --add-label "👀 needs-eyeballs" --repo <repo>
 ```
+
+### 👀 needs-eyeballs Label
+
+**REQUIRED** for all issues ready for human review. This pink label signals "take a look!"
+
+The label + "Ready for Human Review" comment together form the review gate.
 
 ---
 
