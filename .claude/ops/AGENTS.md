@@ -18,6 +18,13 @@ This registry prevents overlap when multiple agents work in parallel.
 | agent-10 | roni-ai-superapp/roni-ai-platform | #10 | main | ready-for-review | 2025-12-25 - M2 verified, found bug #15 |
 | agent-12 | roni-ai-superapp/roni-ai-platform | #12 | main | ready-for-review | 2025-12-25 - Railway-safe CI added |
 | agent-14 | roni-ai-superapp/roni-ai-platform | #14 | main | ready-for-review | 2025-12-25 - Display bug fixed |
+| claude-opus | roni-ai-superapp/repo-platform-api | #15 | agent/opus-9/issue-9-integration-test | ready-for-review | 2025-12-25 - Schema fix PR#2 |
+
+**Issue #15 Fixed (Schema Mismatch):**
+- ✅ Validator now uses `{table, values}` to match executor (was `{table_name, row}`)
+- ✅ All data tools aligned: insert_row, update_row, delete_row
+- ✅ Integration tests updated and re-enabled
+- ✅ PR created: https://github.com/roni-ai-superapp/repo-platform-api/pull/2
 
 **Issues #6, #7, #8 Complete:**
 - ✅ DDL tables (payers, clients, reps, sales_report_entries) + sales_report_view
@@ -37,9 +44,8 @@ This registry prevents overlap when multiple agents work in parallel.
 **Issue #10 M2 Verification Complete:**
 - ✅ M2.1 DDL Generator - Complete
 - ✅ M2.2 Platform API DB - Complete
-- ⚠️ M2.3 Agent Runtime - 85% complete, blocked by #15 (schema mismatch)
-- ⏳ M2.4 Integration Test - Not started, blocked by #15
-- 📝 Created bug issue #15 for schema mismatch
+- ✅ M2.3 Agent Runtime - Complete (#15 schema mismatch fixed)
+- ✅ M2.4 Integration Test - Tests created and enabled, pending DB connection
 
 **Issue #12 Complete (Railway-safe CI):**
 - Added `scripts/check-deps.mjs` to services/plaid, plaid-frontend, accounting-db
