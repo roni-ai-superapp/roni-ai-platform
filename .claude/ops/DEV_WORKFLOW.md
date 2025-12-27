@@ -163,6 +163,37 @@ CI runs on **all PRs** to catch Railway failures before merge:
 
 ---
 
+## 6.1) Known Pitfall: `workspace:*` Protocol
+
+**Problem:** pnpm's `workspace:*` protocol breaks Railway builds.
+
+```
+npm error Unsupported URL Type "workspace:": workspace:*
+```
+
+**Why it happens:**
+- Local monorepo development uses `workspace:*` to reference sibling packages
+- Railway's Railpack builder uses npm, not pnpm
+- npm doesn't understand `workspace:*` and fails during install
+
+**Solution:** The deploy workflow converts `workspace:*` to published versions:
+
+```yaml
+- name: Convert workspace deps for Railway
+  run: |
+    sed -i 's/"workspace:\*"/"^0.1.2"/g' package.json
+```
+
+**Critical:** This step must be in the **Deploy job**, not just Validate.
+The Validate job does a fresh checkout that doesn't persist to Deploy.
+
+**Prevention:**
+- `pnpm check:deps` validates the conversion step exists in the workflow
+- Never remove the sed step from `.github/workflows/deploy-dev.yml`
+- See `packages/frontend/DEPLOY.md` for full Railway deployment guide
+
+---
+
 ## 7) Testing Protocol (Local Only)
 
 **No Playwright/deploy checks yet.** Use unit → integration → manual.

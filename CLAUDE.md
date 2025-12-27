@@ -210,6 +210,19 @@ git push
 
 ---
 
+## 7.1) Known Pitfall: `workspace:*` in Railway
+
+**Do NOT remove the sed conversion step from frontend deploy workflow.**
+
+Railway uses npm (not pnpm), which fails on `workspace:*` dependencies.
+The fix is documented in:
+- `packages/frontend/DEPLOY.md` (full guide)
+- `.claude/ops/DEV_WORKFLOW.md` section 6.1 (quick reference)
+
+The `pnpm check:deps` script validates this step exists.
+
+---
+
 ## 8) Testing Protocol (Local Only)
 
 **No Playwright/deploy checks yet.** Use unit → integration → manual.
