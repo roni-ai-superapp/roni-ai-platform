@@ -32,13 +32,16 @@ app.use(authGuard);
 // Health Check
 // ===========================================================================
 
-app.get('/health', (_req: Request, res: Response) => {
+const healthHandler = (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     service: 'connector-stripe',
     timestamp: new Date().toISOString(),
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/healthz', healthHandler);
 
 // ===========================================================================
 // GET /api/org/billing/balance
@@ -112,9 +115,11 @@ app.get(
         const bt = c.balance_transaction as Stripe.BalanceTransaction | null;
         const pi = c.payment_intent as Stripe.PaymentIntent | null;
 
-        // Get project number from PI metadata
+        // Get project number: PI metadata first, then charge metadata fallback
         const projectNumber =
-          (pi?.metadata?.project_number as string | undefined) || null;
+          (pi?.metadata?.project_number as string | undefined) ||
+          (c.metadata?.project_number as string | undefined) ||
+          null;
 
         return {
           id: c.id,
@@ -307,11 +312,12 @@ app.get(
       const payouts = await stripe.payouts.list(params);
 
       // Fetch balance transactions for each payout
+      // Expand source.payment_intent to get project_number from PI metadata
       const payoutData = await Promise.all(
         payouts.data.map(async (payout) => {
           const bts = await stripe.balanceTransactions.list({
             payout: payout.id,
-            expand: ['data.source'],
+            expand: ['data.source', 'data.source.payment_intent'],
             limit: 100,
           });
 
@@ -338,13 +344,20 @@ app.get(
                 ? extractInvoiceNumbers(source.description || null)
                 : [];
 
+            // Get project number from: charge metadata, or PI metadata
+            const pi = source?.payment_intent as Stripe.PaymentIntent | null;
+            const projectNumber =
+              (source?.metadata?.project_number as string | undefined) ||
+              (pi?.metadata?.project_number as string | undefined) ||
+              null;
+
             return {
               chargeId: source?.id || bt.id,
               created: unixToISO(bt.created),
               gross,
               fee,
               net,
-              projectNumber: null, // Would need DB lookup
+              projectNumber,
               invoiceNumbers: invoiceNums,
             };
           });
@@ -587,19 +600,22 @@ app.get(
       const projectId = req.params.id;
       const invoiceNumbersParam = req.query.invoice_numbers as string | undefined;
 
+      // Get project_number from query param (monolith proxy should supply this)
+      const projectNumber = (req.query.project_number as string) || null;
+
       // This endpoint needs invoice numbers to filter charges
       // In the monolith, these come from the database
       // Here, we expect them to be passed as a query parameter
       if (!invoiceNumbersParam) {
+        // Match monolith message exactly
         res.json({
           success: true,
           data: {
-            projectId,
-            projectNumber: null,
-            invoiceNumbers: [],
+            projectNumber,
+            invoiceNumber: null,
             charges: [],
             matchedCount: 0,
-            message: 'No invoice_numbers provided - pass ?invoice_numbers=123,456',
+            message: 'No invoices found for this project',
           },
         });
         return;
@@ -661,7 +677,7 @@ app.get(
         success: true,
         data: {
           projectId,
-          projectNumber: req.query.project_number as string || null,
+          projectNumber,
           invoiceNumbers,
           charges,
           matchedCount: charges.length,

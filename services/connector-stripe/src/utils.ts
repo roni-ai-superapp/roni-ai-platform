@@ -78,6 +78,7 @@ export function mapStripeError(error: unknown): {
 
 /**
  * Send error response
+ * Note: Monolith does NOT include timestamp in error envelope
  */
 export function sendError(
   res: Response,
@@ -93,10 +94,10 @@ export function sendError(
     durationMs,
   });
 
+  // Match monolith error shape exactly (no timestamp field)
   res.status(status).json({
     success: false,
     error: { code, message },
-    timestamp: new Date().toISOString(),
   });
 }
 
