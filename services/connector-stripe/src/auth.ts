@@ -56,6 +56,5 @@ export function authGuard(
       code: 'UNAUTHORIZED',
       message: 'Authentication required',
     },
-    timestamp: new Date().toISOString(),
   });
 }
